@@ -1,0 +1,74 @@
+targetRole: Desarrollador Flutter Semi-Senior (Mid-Level)
+searchQueries:
+  - Flutter
+  - Desarrollador Flutter
+  - Flutter Developer
+  - Mobile Flutter
+yearsOfExperience: 3
+primaryStack:
+  - Flutter
+  - Dart
+  - Bloc
+  - Riverpod
+  - Firebase
+secondaryStack:
+  - REST API
+  - GraphQL
+  - Clean Architecture
+  - CI/CD
+  - TypeScript
+excludeKeywords:
+  - intern
+  - internship
+  - unpaid
+  - wordpress
+  - php only
+  - staff engineer
+  - principal engineer
+  - 8+ years
+  - 10+ years
+  - 8+ años
+  - 10+ años
+bio: >-
+  Desarrollador Mobile Semi-Senior (Mid-level) con 3 años de experiencia en
+  Flutter y Dart, manejo de estado con Bloc y Riverpod, Firebase, arquitectura
+  limpia y consumo de APIs. No manejo inglés conversacional, por lo que busco
+  vacantes 100% en español para LATAM, Colombia o España acordes a un perfil
+  Semi-Senior (2 a 4 años de experiencia).
+languages:
+  primary: es
+  accepted:
+    - es
+  englishLevel: Sin inglés / Básico
+locations:
+  includeGlobalRemote: true
+  homeCountry: CO
+  targetCountries:
+    - CO
+    - MX
+    - AR
+    - CL
+    - PE
+    - ES
+    - UY
+    - EC
+    - CR
+    - PA
+  workModes:
+    - remote
+    - hybrid
+    - relocation
+scoring:
+  minScoreToNotify: 7
+  maxJobsToEvaluate: 25
+sources:
+  getonboard: true
+  jsearch: true
+  adzuna: true
+  jooble: true
+  remoteok: true
+  remotive: false
+  weworkremotely: false
+  jobicy: false
+  himalayas: false
+  arbeitnow: false

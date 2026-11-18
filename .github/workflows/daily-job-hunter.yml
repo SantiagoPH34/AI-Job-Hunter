@@ -1,0 +1,43 @@
+name: Daily AI Job Hunter
+
+on:
+  schedule:
+    # Ejecuta todos los días a las 12:00 UTC (7:00 AM Colombia / 6:00 AM México / 1:00 PM España)
+    - cron: "0 12 * * *"
+  workflow_dispatch:
+
+jobs:
+  hunt-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Restore and save seen jobs cache
+        uses: actions/cache@v4
+        with:
+          path: data/seen_jobs.json
+          key: seen-jobs-${{ github.run_id }}
+          restore-keys: |
+            seen-jobs-
+
+      - name: Run AI Job Hunter
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
+        run: npm start

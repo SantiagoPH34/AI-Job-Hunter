@@ -1,0 +1,27 @@
+{
+  "name": "ai-job-hunter",
+  "version": "1.0.0",
+  "description": "Buscador y evaluador automático de ofertas de empleo multi-país con Gemini AI y notificaciones por Telegram.",
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/presentation/cli/cli.ts run",
+    "dry-run": "tsx src/presentation/cli/cli.ts run --dry-run",
+    "ui": "tsx src/presentation/http/server.ts",
+    "test-telegram": "tsx src/presentation/cli/cli.ts test-telegram",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@google/genai": "^1.0.0",
+    "dotenv": "^16.4.7",
+    "fast-xml-parser": "^4.5.3",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.7"
+  }
+}

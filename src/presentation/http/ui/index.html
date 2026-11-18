@@ -1,0 +1,991 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AI Job Hunter — Perfil, Búsqueda Global y Filtro Gemini</title>
+    <style>
+      :root {
+        --bg: #0b1020;
+        --panel: #131a2e;
+        --panel-2: #19223b;
+        --border: #263253;
+        --text: #e6ecff;
+        --muted: #93a3c8;
+        --accent: #5b8cff;
+        --accent-2: #22d3ee;
+        --ok: #22c55e;
+        --warn: #f59e0b;
+        --bad: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+        background: radial-gradient(circle at top right, #162244 0%, var(--bg) 55%);
+        color: var(--text);
+        line-height: 1.5;
+      }
+
+      .container {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px;
+      }
+
+      header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: 1.6rem;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-top: 4px;
+      }
+
+      .status-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        font-size: 0.78rem;
+        border: 1px solid var(--border);
+        background: var(--panel);
+        color: var(--muted);
+      }
+
+      .pill.ok {
+        border-color: rgba(34, 197, 94, 0.45);
+        color: #86efac;
+        background: rgba(34, 197, 94, 0.1);
+      }
+
+      .pill.warn {
+        border-color: rgba(245, 158, 11, 0.45);
+        color: #fcd34d;
+        background: rgba(245, 158, 11, 0.08);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 460px 1fr;
+        gap: 20px;
+        align-items: start;
+      }
+
+      @media (max-width: 1024px) {
+        .layout {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+      }
+
+      .card h2 {
+        margin: 0 0 14px;
+        font-size: 1.08rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .section-title {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--accent-2);
+        margin: 18px 0 8px;
+        padding-top: 12px;
+        border-top: 1px solid var(--border);
+      }
+
+      .field {
+        margin-bottom: 12px;
+      }
+
+      label {
+        display: block;
+        font-size: 0.84rem;
+        color: var(--muted);
+        margin-bottom: 5px;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select,
+      textarea {
+        width: 100%;
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 9px 11px;
+        font-size: 0.9rem;
+        font-family: inherit;
+      }
+
+      textarea {
+        min-height: 70px;
+        resize: vertical;
+      }
+
+      .row-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+
+      .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+
+      .check-item {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 7px 10px;
+        font-size: 0.84rem;
+        cursor: pointer;
+      }
+
+      .check-item input {
+        accent-color: var(--accent);
+      }
+
+      .country-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+
+      .chip-btn {
+        background: var(--panel-2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 4px 8px;
+        font-size: 0.78rem;
+        cursor: pointer;
+      }
+
+      .chip-btn.active {
+        background: rgba(91, 140, 255, 0.2);
+        color: #bfdbfe;
+        border-color: var(--accent);
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 16px;
+      }
+
+      button.btn {
+        border: none;
+        border-radius: 9px;
+        padding: 10px 14px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s ease;
+      }
+
+      button.btn:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .btn-primary {
+        background: linear-gradient(135deg, var(--accent), #3b82f6);
+        color: white;
+      }
+
+      .btn-accent {
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+      }
+
+      .btn-secondary {
+        background: var(--panel-2);
+        color: var(--text);
+        border: 1px solid var(--border) !important;
+      }
+
+      .banner {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        display: none;
+      }
+
+      .banner.show {
+        display: block;
+      }
+
+      .banner.ok {
+        background: rgba(34, 197, 94, 0.12);
+        border: 1px solid rgba(34, 197, 94, 0.4);
+        color: #86efac;
+      }
+
+      .banner.err {
+        background: rgba(239, 68, 68, 0.12);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+        color: #fca5a5;
+      }
+
+      .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .stat-box {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 10px 12px;
+      }
+
+      .stat-val {
+        font-size: 1.25rem;
+        font-weight: 700;
+      }
+
+      .stat-lbl {
+        font-size: 0.76rem;
+        color: var(--muted);
+      }
+
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+      }
+
+      .tab {
+        background: var(--panel-2);
+        color: var(--muted);
+        border: 1px solid var(--border);
+        padding: 6px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 0.84rem;
+      }
+
+      .tab.active {
+        background: rgba(91, 140, 255, 0.22);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .job-list {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .job-card {
+        background: var(--panel-2);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+
+      .job-card.kept {
+        border-color: rgba(34, 197, 94, 0.45);
+      }
+
+      .job-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+      }
+
+      .job-title {
+        font-weight: 700;
+        font-size: 1rem;
+        margin: 0;
+      }
+
+      .job-meta {
+        color: var(--muted);
+        font-size: 0.84rem;
+        margin-top: 3px;
+      }
+
+      .score-badge {
+        min-width: 56px;
+        text-align: center;
+        padding: 6px 9px;
+        border-radius: 10px;
+        font-weight: 800;
+        font-size: 0.95rem;
+      }
+
+      .score-high {
+        background: rgba(34, 197, 94, 0.16);
+        color: #86efac;
+        border: 1px solid rgba(34, 197, 94, 0.5);
+      }
+
+      .score-mid {
+        background: rgba(245, 158, 11, 0.16);
+        color: #fcd34d;
+        border: 1px solid rgba(245, 158, 11, 0.5);
+      }
+
+      .score-low {
+        background: rgba(239, 68, 68, 0.14);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 10px 0;
+      }
+
+      .tag {
+        font-size: 0.75rem;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: rgba(91, 140, 255, 0.14);
+        color: #bfdbfe;
+        border: 1px solid rgba(91, 140, 255, 0.35);
+      }
+
+      .tag.neutral {
+        background: rgba(147, 163, 200, 0.12);
+        color: var(--muted);
+        border-color: var(--border);
+      }
+
+      .reasoning {
+        font-size: 0.88rem;
+        color: #d9e2ff;
+        margin: 8px 0;
+      }
+
+      .job-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        margin-top: 10px;
+        font-size: 0.82rem;
+        color: var(--muted);
+      }
+
+      .apply-link {
+        color: var(--accent-2);
+        text-decoration: none;
+        font-weight: 600;
+      }
+
+      .apply-link:hover {
+        text-decoration: underline;
+      }
+
+      .source-reports {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 36px 20px;
+        color: var(--muted);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <div>
+          <h1>AI Job Hunter 🌍</h1>
+          <div class="subtitle">
+            Búsqueda multi-país + filtro inteligente del 1 al 10 con Gemini + envío diario por Telegram
+          </div>
+        </div>
+        <div class="status-pills" id="statusPills"></div>
+      </header>
+
+      <div class="layout">
+        <!-- Profile Editor -->
+        <section class="card">
+          <h2>
+            <span>Tu Perfil de Búsqueda</span>
+            <small style="color: var(--muted); font-weight: 400">config/profile.yaml</small>
+          </h2>
+
+          <div class="field">
+            <label for="targetRole">Rol que buscas</label>
+            <input id="targetRole" type="text" placeholder="Ej: Senior Flutter / Mobile Developer" />
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label for="yearsOfExperience">Años de experiencia</label>
+              <input id="yearsOfExperience" type="number" min="0" max="50" />
+            </div>
+            <div class="field">
+              <label for="minScoreToNotify">Puntaje mínimo (1-10)</label>
+              <input id="minScoreToNotify" type="number" min="1" max="10" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="searchQueries">Consultas de búsqueda (separadas por coma)</label>
+            <input id="searchQueries" type="text" placeholder="Flutter Developer, Senior Mobile Engineer, Dart" />
+          </div>
+
+          <div class="field">
+            <label for="primaryStack">Stack principal (separado por coma)</label>
+            <input id="primaryStack" type="text" placeholder="Flutter, Dart, Bloc, Riverpod, Firebase" />
+          </div>
+
+          <div class="field">
+            <label for="secondaryStack">Stack secundario / complementario</label>
+            <input id="secondaryStack" type="text" placeholder="REST API, GraphQL, Clean Architecture, CI/CD" />
+          </div>
+
+          <div class="field">
+            <label for="excludeKeywords">Palabras a excluir (separadas por coma)</label>
+            <input id="excludeKeywords" type="text" placeholder="intern, internship, unpaid, wordpress" />
+          </div>
+
+          <div class="field">
+            <label for="bio">Resumen de tu perfil (usado por Gemini para puntuar)</label>
+            <textarea id="bio"></textarea>
+          </div>
+
+          <div class="section-title">Idiomas</div>
+          <div class="row-2">
+            <div class="field">
+              <label for="primaryLanguage">Idioma principal</label>
+              <select id="primaryLanguage">
+                <option value="en">Inglés (en)</option>
+                <option value="es">Español (es)</option>
+                <option value="de">Alemán (de)</option>
+                <option value="pt">Portugués (pt)</option>
+                <option value="fr">Francés (fr)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="englishLevel">Nivel de inglés</label>
+              <select id="englishLevel">
+                <option value="Sin inglés / Básico">Sin inglés / Básico</option>
+                <option value="B1">B1 (Intermedio)</option>
+                <option value="B1/B2">B1/B2 (Intermedio / Conversacional)</option>
+                <option value="B2">B2 (Intermedio Alto)</option>
+                <option value="B2+">B2+ (Fluido profesional)</option>
+                <option value="C1">C1 (Avanzado)</option>
+                <option value="C2 / Native">C2 / Nativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="acceptedLanguages">Idiomas aceptados (códigos ISO: en, es, pt...)</label>
+            <input id="acceptedLanguages" type="text" placeholder="en, es" />
+          </div>
+
+          <div class="section-title">Países y Modalidad</div>
+          <label class="check-item" style="margin-bottom: 10px">
+            <input id="includeGlobalRemote" type="checkbox" />
+            <span>Incluir ofertas Remotas Globales (Worldwide / LATAM / Anywhere)</span>
+          </label>
+
+          <div class="row-2">
+            <div class="field">
+              <label for="homeCountry">Tu país base (ISO)</label>
+              <input id="homeCountry" type="text" placeholder="CO" maxlength="4" />
+            </div>
+            <div class="field">
+              <label for="maxJobsToEvaluate">Máx. ofertas a evaluar por corrida</label>
+              <input id="maxJobsToEvaluate" type="number" min="1" max="100" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="targetCountries">Países objetivo (ISO separados por coma)</label>
+            <input id="targetCountries" type="text" placeholder="US, GB, CA, DE, ES, NL, AU, CO, MX, AR, BR" />
+            <div class="country-chips" id="countryPresets"></div>
+          </div>
+
+          <div class="field">
+            <label>Modalidades aceptadas</label>
+            <div class="checkbox-grid" id="workModesGrid"></div>
+          </div>
+
+          <div class="section-title">Fuentes de Datos</div>
+          <div class="checkbox-grid" id="sourcesGrid"></div>
+
+          <div class="actions">
+            <button class="btn btn-secondary" id="saveBtn">Guardar Perfil</button>
+            <button class="btn btn-primary" id="searchBtn">Buscar y Puntuar Ahora</button>
+          </div>
+          <div class="actions">
+            <button class="btn btn-secondary" id="testTgBtn">Probar Bot Telegram</button>
+            <button class="btn btn-accent" id="sendTgBtn">Enviar Top Ofertas a Telegram</button>
+          </div>
+
+          <div class="banner" id="banner"></div>
+        </section>
+
+        <!-- Results Viewer -->
+        <section class="card">
+          <h2>
+            <span>Ofertas Evaluadas</span>
+            <small id="lastRunLabel" style="color: var(--muted); font-weight: 400">Sin ejecuciones recientes</small>
+          </h2>
+
+          <div class="stats-bar">
+            <div class="stat-box">
+              <div class="stat-val" id="statFetched">0</div>
+              <div class="stat-lbl">Obtenidas</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="statPreFiltered">0</div>
+              <div class="stat-lbl">Pre-filtradas</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="statEvaluated">0</div>
+              <div class="stat-lbl">Evaluadas IA</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-val" id="statQualified">0</div>
+              <div class="stat-lbl">Aprobadas</div>
+            </div>
+          </div>
+
+          <div class="source-reports" id="sourceReports"></div>
+
+          <div class="toolbar">
+            <div class="tabs">
+              <button class="tab active" data-filter="all">Todas</button>
+              <button class="tab" data-filter="kept">Solo aprobadas</button>
+            </div>
+          </div>
+
+          <div class="job-list" id="jobList">
+            <div class="empty-state">
+              Ajusta tu perfil a la izquierda y pulsa <b>Buscar y Puntuar Ahora</b> para ver vacantes reales evaluadas del 1 al 10.
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    <script>
+      const PRESET_COUNTRIES = [
+        { code: "CO", label: "Colombia" },
+        { code: "MX", label: "México" },
+        { code: "AR", label: "Argentina" },
+        { code: "CL", label: "Chile" },
+        { code: "PE", label: "Perú" },
+        { code: "ES", label: "España" },
+        { code: "UY", label: "Uruguay" },
+        { code: "EC", label: "Ecuador" },
+        { code: "CR", label: "Costa Rica" },
+        { code: "PA", label: "Panamá" },
+        { code: "US", label: "EE.UU." },
+        { code: "GB", label: "Reino Unido" },
+        { code: "CA", label: "Canadá" },
+        { code: "DE", label: "Alemania" },
+        { code: "BR", label: "Brasil" },
+      ];
+
+      const WORK_MODES = [
+        { id: "remote", label: "Remoto" },
+        { id: "hybrid", label: "Híbrido" },
+        { id: "relocation", label: "Relocalización / Visa" },
+        { id: "onsite", label: "Presencial" },
+      ];
+
+      const SOURCES = [
+        { id: "getonboard", label: "Get on Board LATAM/ES (Gratis)" },
+        { id: "remotive", label: "Remotive (Gratis)" },
+        { id: "remoteok", label: "RemoteOK (Gratis)" },
+        { id: "weworkremotely", label: "WeWorkRemotely RSS" },
+        { id: "jobicy", label: "Jobicy (Gratis)" },
+        { id: "himalayas", label: "Himalayas (Gratis)" },
+        { id: "arbeitnow", label: "Arbeitnow EU (Gratis)" },
+        { id: "jsearch", label: "JSearch (RapidAPI Key)" },
+        { id: "adzuna", label: "Adzuna (API Key)" },
+        { id: "jooble", label: "Jooble (API Key)" },
+      ];
+
+      let currentFilter = "all";
+      let latestSummary = null;
+
+      const el = (id) => document.getElementById(id);
+
+      function splitList(raw) {
+        return raw
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
+      }
+
+      function showBanner(msg, isErr = false) {
+        const b = el("banner");
+        b.textContent = msg;
+        b.className = "banner show " + (isErr ? "err" : "ok");
+      }
+
+      function renderStaticControls() {
+        el("workModesGrid").innerHTML = WORK_MODES.map(
+          (m) => `
+          <label class="check-item">
+            <input type="checkbox" data-workmode="${m.id}" />
+            <span>${m.label}</span>
+          </label>
+        `
+        ).join("");
+
+        el("sourcesGrid").innerHTML = SOURCES.map(
+          (s) => `
+          <label class="check-item">
+            <input type="checkbox" data-source="${s.id}" />
+            <span>${s.label}</span>
+          </label>
+        `
+        ).join("");
+      }
+
+      function renderCountryPresets() {
+        const selected = new Set(splitList(el("targetCountries").value).map((c) => c.toUpperCase()));
+        el("countryPresets").innerHTML = PRESET_COUNTRIES.map(
+          (c) =>
+            `<button type="button" class="chip-btn ${selected.has(c.code) ? "active" : ""}" data-code="${c.code}">${c.code} · ${c.label}</button>`
+        ).join("");
+
+        el("countryPresets").querySelectorAll(".chip-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const code = btn.dataset.code;
+            const list = splitList(el("targetCountries").value).map((c) => c.toUpperCase());
+            const idx = list.indexOf(code);
+            if (idx >= 0) list.splice(idx, 1);
+            else list.push(code);
+            el("targetCountries").value = list.join(", ");
+            renderCountryPresets();
+          });
+        });
+      }
+
+      function populateProfile(p) {
+        el("targetRole").value = p.targetRole || "";
+        el("yearsOfExperience").value = p.yearsOfExperience ?? 4;
+        el("minScoreToNotify").value = p.scoring?.minScoreToNotify ?? 7;
+        el("maxJobsToEvaluate").value = p.scoring?.maxJobsToEvaluate ?? 25;
+        el("searchQueries").value = (p.searchQueries || []).join(", ");
+        el("primaryStack").value = (p.primaryStack || []).join(", ");
+        el("secondaryStack").value = (p.secondaryStack || []).join(", ");
+        el("excludeKeywords").value = (p.excludeKeywords || []).join(", ");
+        el("bio").value = p.bio || "";
+        el("primaryLanguage").value = p.languages?.primary || "en";
+        el("englishLevel").value = p.languages?.englishLevel || "B2+";
+        el("acceptedLanguages").value = (p.languages?.accepted || ["en", "es"]).join(", ");
+        el("includeGlobalRemote").checked = Boolean(p.locations?.includeGlobalRemote);
+        el("homeCountry").value = p.locations?.homeCountry || "CO";
+        el("targetCountries").value = (p.locations?.targetCountries || []).join(", ");
+
+        const modes = new Set(p.locations?.workModes || []);
+        document.querySelectorAll("[data-workmode]").forEach((cb) => {
+          cb.checked = modes.has(cb.dataset.workmode);
+        });
+
+        document.querySelectorAll("[data-source]").forEach((cb) => {
+          cb.checked = Boolean(p.sources?.[cb.dataset.source]);
+        });
+
+        renderCountryPresets();
+      }
+
+      function collectProfile() {
+        const workModes = [];
+        document.querySelectorAll("[data-workmode]").forEach((cb) => {
+          if (cb.checked) workModes.push(cb.dataset.workmode);
+        });
+
+        const sources = {};
+        document.querySelectorAll("[data-source]").forEach((cb) => {
+          sources[cb.dataset.source] = cb.checked;
+        });
+
+        return {
+          targetRole: el("targetRole").value.trim(),
+          searchQueries: splitList(el("searchQueries").value),
+          yearsOfExperience: Number(el("yearsOfExperience").value || 0),
+          primaryStack: splitList(el("primaryStack").value),
+          secondaryStack: splitList(el("secondaryStack").value),
+          excludeKeywords: splitList(el("excludeKeywords").value),
+          bio: el("bio").value.trim(),
+          languages: {
+            primary: el("primaryLanguage").value,
+            accepted: splitList(el("acceptedLanguages").value),
+            englishLevel: el("englishLevel").value,
+          },
+          locations: {
+            includeGlobalRemote: el("includeGlobalRemote").checked,
+            homeCountry: el("homeCountry").value.trim().toUpperCase(),
+            targetCountries: splitList(el("targetCountries").value).map((c) => c.toUpperCase()),
+            workModes: workModes.length ? workModes : ["remote"],
+          },
+          scoring: {
+            minScoreToNotify: Number(el("minScoreToNotify").value || 7),
+            maxJobsToEvaluate: Number(el("maxJobsToEvaluate").value || 25),
+          },
+          sources,
+        };
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;");
+      }
+
+      function renderStatus(status) {
+        const items = [
+          { label: "Gemini AI", ok: status.geminiConfigured, hint: status.geminiConfigured ? "Activo" : "Modo heurístico" },
+          { label: "Telegram", ok: status.telegramConfigured, hint: status.telegramConfigured ? "Listo" : "Sin configurar" },
+          { label: "JSearch", ok: status.rapidApiConfigured, hint: status.rapidApiConfigured ? "Activo" : "Opcional" },
+          { label: "Adzuna", ok: status.adzunaConfigured, hint: status.adzunaConfigured ? "Activo" : "Opcional" },
+          { label: "Jooble", ok: status.joobleConfigured, hint: status.joobleConfigured ? "Activo" : "Opcional" },
+        ];
+        el("statusPills").innerHTML = items
+          .map(
+            (i) =>
+              `<span class="pill ${i.ok ? "ok" : "warn"}">${i.ok ? "●" : "○"} ${i.label}: ${i.hint}</span>`
+          )
+          .join("");
+      }
+
+      function renderResults(summary) {
+        latestSummary = summary;
+        if (!summary || !Array.isArray(summary.results)) return;
+
+        el("lastRunLabel").textContent = summary.ranAt
+          ? "Última corrida: " + new Date(summary.ranAt).toLocaleString()
+          : "";
+        el("statFetched").textContent = summary.totalFetched ?? 0;
+        el("statPreFiltered").textContent = summary.afterPreFilter ?? 0;
+        el("statEvaluated").textContent = summary.evaluatedCount ?? 0;
+        el("statQualified").textContent = summary.qualifiedCount ?? 0;
+
+        el("sourceReports").innerHTML = (summary.sourceReports || [])
+          .filter((r) => r.status !== "skipped")
+          .map(
+            (r) =>
+              `<span class="pill ${r.status === "ok" ? "ok" : "warn"}">${escapeHtml(r.source)}: ${r.status === "ok" ? r.fetchedCount : "error"}</span>`
+          )
+          .join("");
+
+        const jobs =
+          currentFilter === "kept"
+            ? summary.results.filter((j) => j.keep)
+            : summary.results;
+
+        if (jobs.length === 0) {
+          el("jobList").innerHTML = `<div class="empty-state">No hay ofertas que mostrar con el filtro actual.</div>`;
+          return;
+        }
+
+        el("jobList").innerHTML = jobs
+          .map((job) => {
+            const scoreClass = job.score >= 8 ? "score-high" : job.score >= 6 ? "score-mid" : "score-low";
+            const skillsHtml = (job.matchedSkills || [])
+              .slice(0, 6)
+              .map((s) => `<span class="tag">${escapeHtml(s)}</span>`)
+              .join("");
+
+            return `
+            <article class="job-card ${job.keep ? "kept" : ""}">
+              <div class="job-head">
+                <div>
+                  <h3 class="job-title">${escapeHtml(job.title)}</h3>
+                  <div class="job-meta">
+                    🏢 ${escapeHtml(job.company)} · 📍 ${escapeHtml(job.location)} · 🌐 ${escapeHtml(job.language.toUpperCase())} · Fuente: ${escapeHtml(job.source)}
+                  </div>
+                </div>
+                <div class="score-badge ${scoreClass}">${job.score}/10</div>
+              </div>
+              <div class="tags">
+                <span class="tag neutral">${job.scoredBy === "gemini" ? "🤖 Gemini AI" : "⚙️ Heurístico"}</span>
+                <span class="tag neutral">🗣 ${escapeHtml(job.languageFit)}</span>
+                <span class="tag neutral">📍 ${escapeHtml(job.locationFit)}</span>
+                ${job.salary ? `<span class="tag neutral">💰 ${escapeHtml(job.salary)}</span>` : ""}
+                ${skillsHtml}
+              </div>
+              <p class="reasoning">${escapeHtml(job.reasoning)}</p>
+              <div class="job-footer">
+                <span>${job.keep ? "✅ Seleccionada para Telegram" : "Descartada por puntaje mínimo"}</span>
+                <a class="apply-link" href="${escapeHtml(job.url)}" target="_blank" rel="noopener noreferrer">Abrir oferta ↗</a>
+              </div>
+            </article>
+          `;
+          })
+          .join("");
+      }
+
+      async function saveProfileRequest() {
+        const profile = collectProfile();
+        const res = await fetch("/api/profile", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(profile),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Error guardando perfil");
+        populateProfile(data);
+        return data;
+      }
+
+      async function init() {
+        renderStaticControls();
+        el("targetCountries").addEventListener("input", renderCountryPresets);
+
+        const [statusRes, profileRes, resultsRes] = await Promise.all([
+          fetch("/api/status"),
+          fetch("/api/profile"),
+          fetch("/api/results"),
+        ]);
+
+        renderStatus(await statusRes.json());
+        populateProfile(await profileRes.json());
+        const results = await resultsRes.json();
+        if (results && results.results && results.results.length > 0) {
+          renderResults(results);
+        }
+
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.addEventListener("click", () => {
+            document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+            tab.classList.add("active");
+            currentFilter = tab.dataset.filter;
+            if (latestSummary) renderResults(latestSummary);
+          });
+        });
+
+        el("saveBtn").addEventListener("click", async () => {
+          try {
+            await saveProfileRequest();
+            showBanner("Perfil guardado en config/profile.yaml ✅");
+          } catch (e) {
+            showBanner(e.message, true);
+          }
+        });
+
+        el("searchBtn").addEventListener("click", async () => {
+          const btn = el("searchBtn");
+          btn.disabled = true;
+          btn.textContent = "Buscando y evaluando...";
+          try {
+            await saveProfileRequest();
+            const res = await fetch("/api/search", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ dryRun: true, ignoreSeen: true, notifyTelegram: false }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Error en la búsqueda");
+            renderResults(data);
+            showBanner(`Búsqueda completada: ${data.qualifiedCount} ofertas aprobadas de ${data.evaluatedCount} evaluadas.`);
+          } catch (e) {
+            showBanner(e.message, true);
+          } finally {
+            btn.disabled = false;
+            btn.textContent = "Buscar y Puntuar Ahora";
+          }
+        });
+
+        el("testTgBtn").addEventListener("click", async () => {
+          try {
+            const res = await fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mode: "test" }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Error enviando prueba");
+            showBanner(data.message);
+          } catch (e) {
+            showBanner(e.message, true);
+          }
+        });
+
+        el("sendTgBtn").addEventListener("click", async () => {
+          try {
+            const res = await fetch("/api/notify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ mode: "latest" }),
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || "Error enviando ofertas");
+            showBanner(data.message);
+          } catch (e) {
+            showBanner(e.message, true);
+          }
+        });
+      }
+
+      init();
+    </script>
+  </body>
+</html>
