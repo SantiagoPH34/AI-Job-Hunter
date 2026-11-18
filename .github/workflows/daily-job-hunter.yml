@@ -1,13 +1,17 @@
-name: Daily AI Job Hunter
+name: CI & Daily AI Job Hunter
 
 on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
   schedule:
     # Ejecuta todos los días a las 12:00 UTC (7:00 AM Colombia / 6:00 AM México / 1:00 PM España)
     - cron: "0 12 * * *"
   workflow_dispatch:
 
 jobs:
-  hunt-jobs:
+  ci-and-hunt:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,7 +27,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
       - name: Restore and save seen jobs cache
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         uses: actions/cache@v4
         with:
           path: data/seen_jobs.json
@@ -31,7 +42,8 @@ jobs:
           restore-keys: |
             seen-jobs-
 
-      - name: Run AI Job Hunter
+      - name: Run AI Job Hunter (only when Secrets are configured)
+        if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -40,4 +52,9 @@ jobs:
           ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
           ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
           JOOBLE_API_KEY: ${{ secrets.JOOBLE_API_KEY }}
-        run: npm start
+        run: |
+          if [ -n "$GEMINI_API_KEY" ] || [ -n "$TELEGRAM_BOT_TOKEN" ]; then
+            npm start
+          else
+            echo "Secrets no configurados en este repositorio: ejecución diaria omitida."
+          fi
