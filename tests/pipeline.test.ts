@@ -283,4 +283,59 @@ describe("Application Use Case (HuntJobsUseCase with mocked ports)", () => {
     expect(markedSeenIds).toEqual(["es-flutter-1"]);
     expect(mockSeenRepo.loadLatestResults()?.qualifiedCount).toBe(1);
   });
+
+  it("sends daily empty-summary notification when notifyTelegram is true and 0 jobs qualify", async () => {
+    const profile = getDefaultProfile();
+
+    const emptySource: JobSourcePort = {
+      id: "getonboard",
+      requiresKey: false,
+      isKeyConfigured: () => true,
+      fetchJobs: async () => [],
+    };
+
+    const mockScorer: JobScorerPort = {
+      scoreOffers: async () => [],
+    };
+
+    let notifyOptionsPassed: { notifyWhenEmpty?: boolean } | undefined;
+    const mockNotifier: NotificationPort = {
+      isConfigured: () => true,
+      sendJobs: async (_jobs, _profile, options) => {
+        notifyOptionsPassed = options;
+        return { sent: true, messageCount: 1 };
+      },
+      sendTestMessage: async () => undefined,
+    };
+
+    const mockProfileRepo: ProfileRepositoryPort = {
+      load: () => profile,
+      save: (p: ProfileConfig) => p,
+    };
+
+    let savedSummary: PipelineRunSummary | null = null;
+    const mockSeenRepo: SeenJobsRepositoryPort = {
+      filterUnseen: (offers) => offers,
+      markAsSeen: () => undefined,
+      saveLatestResults: (summary) => {
+        savedSummary = summary;
+      },
+      loadLatestResults: () => savedSummary,
+    };
+
+    const useCase = new HuntJobsUseCase(
+      [emptySource],
+      mockScorer,
+      mockNotifier,
+      mockProfileRepo,
+      mockSeenRepo,
+      new JobFilterService()
+    );
+
+    const summary = await useCase.execute({ dryRun: false, notifyTelegram: true, onLog: () => undefined });
+
+    expect(summary.qualifiedCount).toBe(0);
+    expect(summary.telegramSent).toBe(true);
+    expect(notifyOptionsPassed).toEqual({ notifyWhenEmpty: true });
+  });
 });

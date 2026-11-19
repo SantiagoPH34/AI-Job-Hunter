@@ -59,13 +59,17 @@ export class HuntJobsUseCase {
     let telegramSent = false;
     let telegramError: string | undefined;
 
-    if (notifyTelegram && qualified.length > 0) {
+    if (notifyTelegram) {
       try {
-        const tgResult = await this.notifier.sendJobs(qualified, profile);
+        const tgResult = await this.notifier.sendJobs(qualified, profile, { notifyWhenEmpty: true });
         telegramSent = tgResult.sent;
         telegramError = tgResult.error;
         if (tgResult.sent) {
-          log(`📨 Enviadas ${qualified.length} ofertas a Telegram (${tgResult.messageCount} mensaje(s)).`);
+          log(
+            qualified.length > 0
+              ? `📨 Enviadas ${qualified.length} ofertas a Telegram (${tgResult.messageCount} mensaje(s)).`
+              : `📨 Resumen diario (sin novedades nuevas hoy) enviado a Telegram.`
+          );
         } else if (tgResult.error) {
           log(`⚠️ Telegram no enviado: ${tgResult.error}`);
         }
